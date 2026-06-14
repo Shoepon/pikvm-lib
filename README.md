@@ -133,10 +133,11 @@ pikvm_instance.send_click("left")
 
 ```
 
-* **Drag mouse to Location (x,y):**
+* **Drag mouse to Location (x,y) or Relatively Move (dx, dy):**
 ```python
 pikvm_instance.send_mouse_event(button, "true")
 pikvm_instance.send_mouse_move_event(128, 256)
+# or
+pikvm_instance.send_mouse_relative_event(128, 256)
 pikvm_instance.send_mouse_event(button, "false")
-
 ```

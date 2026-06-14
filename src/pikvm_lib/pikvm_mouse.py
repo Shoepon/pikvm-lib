@@ -24,6 +24,11 @@ class MouseMoveEvent(TypedDict):
     event_type: Literal["mouse_move"]
     event: dict[Literal["to"], dict[Literal["x", "y"], int]]
 
+class MouseRelativeEvent(TypedDict):
+    """Type definition for relative mouse movement events"""
+    event_type: Literal["mouse_relative"]
+    event: dict[Literal["delta"], dict[Literal["x", "y"], int]]
+
 class MouseWheelEvent(TypedDict):
     """Type definition for mouse wheel events"""
     event_type: Literal["mouse_wheel"]
@@ -110,6 +115,33 @@ class PiKVMMouse(PiKVMEndpoints):
         self.ws_client._send_with_retry(json.dumps(event))
         if self.extra_verbose:
             self.logger.debug(f"Mouse moved to x:{x}, y:{y} (KVM coords: {kvmx}, {kvmy})")
+
+    def send_mouse_relative_event(self, dx: int, dy: int):
+        """
+        Send a relative mouse movement event to the PiKVM server.
+
+        :param dx: X coordinate delta in screen pixels
+        :param dy: Y coordinate delta in screen pixels
+        """
+        if self.width is None or self.height is None:
+            streamer_image = self.get_streamer_image()
+            self.width, self.height = streamer_image.size
+            if self.extra_verbose:
+                self.logger.debug(f"Screen size detected: {self.width}x{self.height}")
+
+        kvmx, kvmy = self._scale_mouse_xy_to_i16(dx, dy, self.width, self.height)
+        event: MouseRelativeEvent = {
+            "event_type": "mouse_relative",
+            "event": {
+                "delta": {
+                    "x": kvmx,
+                    "y": kvmy
+                }
+            }
+        }
+        self.ws_client._send_with_retry(json.dumps(event))
+        if self.extra_verbose:
+            self.logger.debug(f"Mouse moved dx:{dx}, dy:{dy} (KVM coords: {kvmx}, {kvmy})")
 
     def send_mouse_wheel_event(self, delta: int):
         """
